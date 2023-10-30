@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta charset="iso-8559-1" />
+    <meta name="description" content="Control de vehiculo movil" />
+    <meta name="keywords" content="MQTT IOT ESP8266 NODEMCU" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Sistema de control</title>
+    <script src="mqttws31.js" type="text/javascript"></script>
+    <script
+      src="https://api.cloudmqtt.com/sso/js/mqttws31.js"
+      type="text/javascript"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js"
+      type="text/javascript"
+    ></script>
+  </head>
+  <body>
+    <div>
+      <br />
+      <br />
+      <h1>Proyecto de Electrónica Aplicada:</h1>
+      <h2>Suscripciones:</h2>
+    </div>
+    <div>
+      <a>Movimiento del vehículo:</a>
+      <a id="Movimiento">-</a>
+    </div>
+    <div>
+      <a>Sensor de color:</a>
+      <a id="Color">-</a>
+    </div>
+    <div>
+      <h2>Publicaciones:</h2>
+    </div>
+    <div>
+      <a>Modo:</a>
+      <button type="button" onclick='EnviarAlESP("U")'>Manual</button>
+      <button type="button" onclick='EnviarAlESP("I")'>Automatico</button>
+    </div>
+    <div>
+      <a>Movimiento:</a>
+      <button type="button" onclick='EnviarAlESP("W")'>Adelante</button>
+      <button type="button" onclick='EnviarAlESP("S")'>Atras</button>
+      <button type="button" onclick='EnviarAlESP("D")'>Derecha</button>
+      <button type="button" onclick='EnviarAlESP("A")'>Izquierda</button>
+    </div>
+    <div>
+      <a>Giro:</a>
+      <button type="button" onclick='EnviarAlESP("Z")'>45°</button>
+      <button type="button" onclick='EnviarAlESP("X")'>90°</button>
+      <button type="button" onclick='EnviarAlESP("C")'>135°</button>
+      <button type="button" onclick='EnviarAlESP("V")'>180°</button>
+      <button type="button" onclick='EnviarAlESP("B")'>225°</button>
+      <button type="button" onclick='EnviarAlESP("N")'>270°</button>
+      <button type="button" onclick='EnviarAlESP("M")'>315°</button>
+      <button type="button" onclick='EnviarAlESP("L")'>360°</button>
+    </div>
+    <div>
+      <a>Pinza:</a>
+      <button type="button" onclick='EnviarAlESP("O")'>Abrir</button>
+      <button type="button" onclick='EnviarAlESP("P")'>Cerrar</button>
+    </div>
+    <script>
+      usuario = "aplicada";
+      contrasena = "0123456789";
+
+      function EnviarAlESP(dato) {
+        message = new Paho.MQTT.Message(dato);
+        message.destinationName = "/" + usuario + "/Movimiento";
+        client.send(message);
+      }
+
+      function onConnect() {
+        console.log("onConnect");
+        client.subscribe("#");
+      }
+
+      function onConnectionLost(responseObject) {
+        if (responseObject.errorCode !== 0) {
+          console.log("onConnectionLost:", responseObject.errorMessage);
+          setTimeout(function() {
+            client.connect();
+          }, 5000);
+        }
+      }
+
+      // called when a message arrives
+      function onMessageArrived(message) {
+        if (message.destinationName == "/" + usuario + "/" + "Movimiento") {
+          //acá coloco el topic
+          document.getElementById("Movimiento").textContent =
+            message.payloadString;
+        }
+        if (message.destinationName == "/" + usuario + "/" + "Color") {
+          //acá coloco el topic
+          document.getElementById("Color").textContent = message.payloadString;
+        }
+      }
+
+      function onFailure(invocationContext, errorCode, errorMessage) {
+        var errDiv = document.getElementById("error");
+        errDiv.textContent =
+          "Could not connect to WebSocket server, most likely you're behind a firewall that doesn't allow outgoing connections to port 39627";
+        errDiv.style.display = "block";
+      }
+
+      var clientId = "ws" + Math.random();
+      // Create a client instance
+      var client = new Paho.MQTT.Client(
+        "postman.cloudmqtt.com",
+        33313,
+        clientId
+      );
+
+      // set callback handlers
+      client.onConnectionLost = onConnectionLost;
+      client.onMessageArrived = onMessageArrived;
+
+      // connect the client
+      client.connect({
+        useSSL: true,
+        userName: usuario,
+        password: contrasena,
+        onSuccess: onConnect,
+        onFailure: onFailure
+      });
+    </script>
+  </body>
+</html>
